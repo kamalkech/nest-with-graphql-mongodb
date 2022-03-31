@@ -1,6 +1,8 @@
 export class User {}
 import { Field, ID, ObjectType } from '@nestjs/graphql';
+
 import { useMongoosePlugin } from '@src/shared/decorators/use-mongoose-plugins.decorator';
+import { Paginated } from '@src/shared/dto';
 import { BaseModel } from '@src/shared/models/base.model';
 import { mongoose, prop } from '@typegoose/typegoose';
 
@@ -15,3 +17,6 @@ export class UserModel extends BaseModel {
   @prop()
   username: string;
 }
+
+@ObjectType()
+export class UserModelPagination extends Paginated(UserModel) {}

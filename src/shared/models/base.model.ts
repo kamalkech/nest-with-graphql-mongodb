@@ -1,4 +1,5 @@
 import { modelOptions, prop, Severity } from '@typegoose/typegoose';
+import { TimeStamps } from '@typegoose/typegoose/lib/defaultClasses';
 
 @modelOptions({
   options: { allowMixed: Severity.ALLOW },
@@ -10,7 +11,7 @@ import { modelOptions, prop, Severity } from '@typegoose/typegoose';
     },
   },
 })
-export abstract class BaseModel {
+export abstract class BaseModel extends TimeStamps {
   @prop()
   createdAt: Date; // provided by schemaOptions.timestamps
 

@@ -1,5 +1,6 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { useMongoosePlugin } from '@src/shared/decorators/use-mongoose-plugins.decorator';
+import { Paginated } from '@src/shared/dto';
 import { BaseModel } from '@src/shared/models/base.model';
 import { mongoose, prop } from '@typegoose/typegoose';
 import { UserModel } from './user.model';
@@ -14,9 +15,9 @@ export class CatModel extends BaseModel {
   @Field(() => UserModel)
   @prop({
     required: true,
-    unique: true,
+    // unique: true,
     ref: () => UserModel,
-    autopopulate: { maxDepth: 1 },
+    autopopulate: { maxDepth: 2 },
   })
   owner: UserModel;
 
@@ -32,3 +33,6 @@ export class CatModel extends BaseModel {
   @prop()
   price: number;
 }
+
+@ObjectType()
+export class CatModelPagination extends Paginated(CatModel) {}

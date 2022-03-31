@@ -1,4 +1,4 @@
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, Type } from '@nestjs/common';
 import { DocumentType, ReturnModelType } from '@typegoose/typegoose';
 import { AnyParamConstructor } from '@typegoose/typegoose/lib/types';
 import {
@@ -12,6 +12,7 @@ import {
 } from 'mongoose';
 import { MongoError } from 'mongodb';
 import { BaseModel } from '../models/base.model';
+import { Paginated } from '../dto';
 
 type QueryList<T extends BaseModel> = DocumentQuery<
   Array<DocumentType<T>>,
@@ -30,6 +31,11 @@ interface QueryOptions {
 export type ModelType<TModel extends BaseModel> = ReturnModelType<
   AnyParamConstructor<TModel>
 >;
+
+export interface IPaginatedType<T> {
+  nodes: T[];
+  totalCount: number;
+}
 
 export abstract class BaseRepository<TModel extends BaseModel> {
   protected model: ModelType<TModel>;
@@ -68,6 +74,26 @@ export abstract class BaseRepository<TModel extends BaseModel> {
     return this.model
       .find()
       .setOptions(BaseRepository.getQueryOptions(options));
+  }
+
+  async findAllWithPager(pagination: {
+    skip: number;
+    limit: number;
+  }): Promise<IPaginatedType<TModel>> {
+    const data = await this.model.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $facet: {
+          data: [{ $skip: pagination.skip }, { $limit: pagination.limit }],
+          pageInfo: [{ $count: 'count' }],
+        },
+      },
+    ]);
+
+    return {
+      nodes: data[0].data,
+      totalCount: data[0].data.length > 0 ? data[0].pageInfo[0].count : 0,
+    };
   }
 
   findOne(options?: QueryOptions): QueryItem<TModel> {
@@ -167,3 +193,5 @@ export abstract class BaseRepository<TModel extends BaseModel> {
     }
   }
 }
+
+// export class UserModelPagination implements IPaginatedType(UserModel) {}
