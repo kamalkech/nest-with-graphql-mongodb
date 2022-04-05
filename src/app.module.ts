@@ -10,6 +10,7 @@ import { SharedModule } from './shared/shared.module';
 import { ResolversModule } from './resolvers/resolvers.module';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { DatabaseModule } from './database/database.module';
     SharedModule,
     ResolversModule,
     DatabaseModule,
+    RedisModule,
   ],
   providers: [AppService],
 })

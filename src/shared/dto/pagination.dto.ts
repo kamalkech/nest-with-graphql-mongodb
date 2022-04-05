@@ -32,3 +32,24 @@ export function Paginated<T>(classRef: Type<T>): Type<IPaginatedType<T>> {
   }
   return PaginatedType as Type<IPaginatedType<T>>;
 }
+
+@InputType()
+export class _PaginationInput {
+  @Field(() => Int)
+  page: number;
+
+  @Field(() => String, { nullable: true })
+  sortType: string;
+
+  @Field(() => Boolean, { nullable: true })
+  sortDirection: boolean;
+
+  @Field(() => Int, { nullable: true })
+  itemsPerPage: number;
+}
+
+@InputType()
+export class FilterProviderInput {
+  @Field(() => String, { nullable: true })
+  name?: string;
+}

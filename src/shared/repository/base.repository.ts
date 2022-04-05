@@ -12,7 +12,7 @@ import {
 } from 'mongoose';
 import { MongoError } from 'mongodb';
 import { BaseModel } from '../models/base.model';
-import { Paginated } from '../dto';
+import { FilterProviderInput, Paginated, _PaginationInput } from '../dto';
 
 type QueryList<T extends BaseModel> = DocumentQuery<
   Array<DocumentType<T>>,
@@ -102,9 +102,9 @@ export abstract class BaseRepository<TModel extends BaseModel> {
       .setOptions(BaseRepository.getQueryOptions(options));
   }
 
-  findById(id: string, options?: QueryOptions): QueryItem<TModel> {
+  findById(id: Types.ObjectId, options?: QueryOptions): QueryItem<TModel> {
     return this.model
-      .findById(Types.ObjectId(id))
+      .findById(id)
       .setOptions(BaseRepository.getQueryOptions(options));
   }
 
@@ -133,12 +133,20 @@ export abstract class BaseRepository<TModel extends BaseModel> {
   }
 
   update(item: TModel, options?: QueryOptions): QueryItem<TModel> {
-    return this.model
-      .findByIdAndUpdate(Types.ObjectId(item.id), { $set: item } as any, {
-        omitUndefined: true,
-        new: true,
-      })
-      .setOptions(BaseRepository.getQueryOptions(options));
+    try {
+      const findItem = this.findById(item.id);
+      if (findItem) {
+        throw Error(`Item not found by id: '${item.id}'`);
+      }
+      return this.model
+        .findByIdAndUpdate(Types.ObjectId(item.id), { $set: item } as any, {
+          omitUndefined: true,
+          new: true,
+        })
+        .setOptions(BaseRepository.getQueryOptions(options));
+    } catch (error) {
+      throw error;
+    }
   }
 
   updateById(
@@ -190,6 +198,64 @@ export abstract class BaseRepository<TModel extends BaseModel> {
       return await this.model.exists(filter);
     } catch (e) {
       BaseRepository.throwMongoError(e);
+    }
+  }
+
+  searchProviders = async (
+    name: string,
+    page: number,
+    sortType = 'name',
+    sortDirection = -1,
+    itemsPerPage: number = 20,
+    options?: QueryOptions,
+  ): Promise<IPaginatedType<TModel>> => {
+    try {
+      console.log('name', name);
+      const list = await this.model
+        .find({ username: { $regex: new RegExp(name, 'i') } })
+        .find()
+        .sort({ [sortType]: sortDirection })
+        .skip(itemsPerPage * page - itemsPerPage)
+        .limit(itemsPerPage)
+        .setOptions(BaseRepository.getQueryOptions(options));
+
+      const count = await this.model
+        .countDocuments({ username: { $regex: new RegExp(name, 'i') } })
+        .exec();
+
+      return {
+        nodes: list,
+        totalCount: count,
+      };
+    } catch (e) {
+      console.log('e', e);
+      throw e;
+    }
+  };
+
+  async getProviderPage(
+    pagination: _PaginationInput,
+    filter?: FilterProviderInput,
+  ): Promise<IPaginatedType<TModel>> {
+    try {
+      const list = await this.model
+        .find({ name: { $regex: filter.name } })
+        .sort({ [pagination.sortType]: pagination.sortDirection })
+        .skip(
+          pagination.itemsPerPage * pagination.page - pagination.itemsPerPage,
+        )
+        .limit(pagination.itemsPerPage)
+        .exec();
+
+      const count = await this.model.countDocuments({}).exec();
+
+      return {
+        nodes: list,
+        totalCount: count,
+      };
+    } catch (e) {
+      console.log('e', e);
+      throw e;
     }
   }
 }
