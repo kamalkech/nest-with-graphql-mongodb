@@ -15,7 +15,12 @@ export class TokenRepository implements OnModuleInit {
   }
 
   async findAll(): Promise<TokenAPi[]> {
-    return await this.repository.search().return.all();
+    try {
+      return await this.repository.search().return.all();
+    } catch (error) {
+      console.error(`Expecting find all api tokens!`);
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<TokenAPi> {
@@ -27,6 +32,7 @@ export class TokenRepository implements OnModuleInit {
       return result;
     } catch (error) {
       console.log(`Expecting find api token by ID: ${id}`);
+      throw error;
     }
   }
 
@@ -50,11 +56,18 @@ export class TokenRepository implements OnModuleInit {
 
       return token_api;
     } catch (error) {
+      console.error(`Expecting create api token`);
       throw error;
     }
   }
 
-  async delete(id: string): Promise<void> {
-    const res = await this.repository.remove(id);
+  async delete(id: string): Promise<boolean> {
+    try {
+      await this.repository.remove(id);
+      return true;
+    } catch (error) {
+      console.error(`Expecting delete api token by id: ${id}`);
+      throw error;
+    }
   }
 }
