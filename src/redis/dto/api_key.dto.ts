@@ -6,3 +6,7 @@ export class CreateApiKeyInput {
   status: boolean;
   date_expire: Date;
 }
+
+export class ParamApiKeyInput {
+  id: string;
+}

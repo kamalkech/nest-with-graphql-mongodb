@@ -1,14 +1,20 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { CreateApiKeyInput } from '../dto/api_key.dto';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreateApiKeyInput, ParamApiKeyInput } from '../dto/api_key.dto';
+import { TokenAPi } from '../schema/api_token.schema';
 import { TokenRepository } from '../services/token.repository';
 
 @Controller('redis')
 export class RedisController {
   constructor(private readonly tokenRepository: TokenRepository) {}
 
-  @Get('findAll')
-  async findAll() {
+  @Get()
+  async findAll(): Promise<TokenAPi[]> {
     return await this.tokenRepository.findAll();
+  }
+
+  @Get(':id')
+  async findById(@Param() param: ParamApiKeyInput): Promise<TokenAPi> {
+    return await this.tokenRepository.findById(param.id);
   }
 
   @Post('create')

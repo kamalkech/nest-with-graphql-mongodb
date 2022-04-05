@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import RedisClient from '@src/redis/redis-client';
 import { CreateApiKeyInput } from '../dto/api_key.dto';
-import { SchemaTokenAPi } from '../schema/api_token.schema';
+import { SchemaTokenAPi, TokenAPi } from '../schema/api_token.schema';
 
 @Injectable()
 export class TokenRepository implements OnModuleInit {
@@ -14,8 +14,20 @@ export class TokenRepository implements OnModuleInit {
     this.repository.createIndex();
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll(): Promise<TokenAPi[]> {
     return await this.repository.search().return.all();
+  }
+
+  async findById(id: string): Promise<TokenAPi> {
+    try {
+      const result: TokenAPi = await this.repository.fetch(id);
+      if (!Object.keys(result.entityData).length) {
+        throw new Error('Api Key not found!');
+      }
+      return result;
+    } catch (error) {
+      console.log(`Expecting find api token by ID: ${id}`);
+    }
   }
 
   async create(input: CreateApiKeyInput): Promise<any> {
